@@ -737,6 +737,9 @@ function tabKonto() {
       <div class="skins">${skins.map(s => `<button class="skin ${store.skin === s[0] ? 'on' : ''}" data-a="skin" data-s="${s[0]}"><i style="background:${s[2]}"></i>${s[1]}</button>`).join('')}</div></div>
     <div class="surf"><h2 class="sec" style="margin:0">Menu</h2>
       <p class="note-s" style="margin-top:8px">Hold fingeren på menuen i bunden og træk til siden for at skifte fane.</p></div>
+    <div class="surf"><h2 class="sec" style="margin:0">Åbningsanimation</h2>
+      <p class="note-s" style="margin-top:8px">Vises, når appen åbnes. Hvis din telefon har slået bevægelser fra, springes den over. Her kan du se den alligevel.</p>
+      <button class="danger" data-a="splash">Afspil animationen</button></div>
     <div class="surf"><h2 class="sec" style="margin:0">Data</h2>
       <button class="danger ${S.sure ? 'sure' : ''}" data-a="reset">${S.sure ? 'Tryk igen for at slette alt' : 'Nulstil fremgang'}</button>
       <p class="note-s">Dine tal gemmes kun i denne browser, ikke på en server.</p></div>`;
@@ -820,6 +823,7 @@ app.addEventListener('click', e => {
   else if (a === 'home') toTabs();
   else if (a === 'tab') setTab(b.dataset.t);
   else if (a === 'hm') { S.hm = S.hm === b.dataset.k ? null : b.dataset.k; render(false); }
+  else if (a === 'splash') playSplash(true);
   else if (a === 'skin') { store.skin = b.dataset.s; save(); applySkin(); render(false); }
   else if (a === 'len') { store.len = +b.dataset.n; save(); render(false); }
   else if (a === 'reset') {
@@ -879,13 +883,21 @@ window.addEventListener('resize', () => { if (S.screen === 'tabs') navSync(); })
 render(false);
 
 /* Åbningsanimation */
-(function () {
-  const sp = document.getElementById('splash'); if (!sp) return;
-  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { sp.remove(); return; }
+const SPLASH_HTML = (document.getElementById('splash') || {}).outerHTML || '';
+function playSplash(force) {
+  let sp = document.getElementById('splash');
+  if (force || !sp) {
+    if (sp) sp.remove();
+    if (!SPLASH_HTML) return;
+    document.body.insertAdjacentHTML('beforeend', SPLASH_HTML);
+    sp = document.getElementById('splash');
+  }
+  if (!force && window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { sp.remove(); return; }
   const kill = () => { if (!sp.parentNode || sp.classList.contains('out')) return; sp.classList.add('out'); setTimeout(() => sp.remove(), 500); };
   sp.addEventListener('click', kill);
   setTimeout(kill, 2400);
-})();
+}
+playSplash(false);
 </script>
 <script>if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) { navigator.serviceWorker.register('sw.js').catch(function () {}); }</script>
 </body>
