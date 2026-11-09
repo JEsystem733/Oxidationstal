@@ -1,0 +1,773 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1A1850">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Oxidationstal">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<style>html{color-scheme:dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+<title>Oxidationstal Træner</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Permanent+Marker&display=swap">
+<style>
+/* Layout: telefon-app i én kolonne (max 480px, centreret på pc). Tre faner i en svævende lys menu i bunden. Spørgsmål fylder hele skærmen uden menu. */
+:root {
+  --ink: #FFFFFF; --soft: #C6C5F0; --faint: #A3A2DC;
+  --bg: #1A1850; --glow-a: #4B40B4; --glow-b: #2B3A9C;
+  --ac: #33DDE8; --ac-ink: #0A2748;
+  --surf: rgba(255,255,255,.08); --surf-2: rgba(255,255,255,.14); --line: rgba(255,255,255,.12);
+  --pill: #FFFFFF; --pill-ink: #1B1A4D; --pill-hover: #EEEDFB;
+  --nav: rgba(255,255,255,.94); --nav-ink: #4A4980;
+  --ok: #1B8F4E; --ok-bg: #E1F7E9; --bad: #C93434; --bad-bg: #FDE7E7; --card-ink: #1B1A4D;
+  --paper: #D9D3C5; --marker: #17181A;
+  --font: 'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --hand: 'Permanent Marker', 'Segoe Print', 'Bradley Hand', cursive;
+  color-scheme: dark;
+}
+:root[data-skin="mint"] { --bg: #0B2928; --glow-a: #1B8A72; --glow-b: #145A70; --ac: #7CF2B0; --ac-ink: #06301E; --nav-ink: #2F5A52; }
+:root[data-skin="sunset"] { --bg: #2A1536; --glow-a: #B8427C; --glow-b: #5B2B9A; --ac: #FFB26B; --ac-ink: #3A1D08; --nav-ink: #6A4A74; }
+:root[data-skin="neon"] { --bg: #0E0E13; --glow-a: #2B2B3A; --glow-b: #1B1B26; --ac: #C6FF3D; --ac-ink: #1B2600; --nav-ink: #4A4A5A; }
+* { box-sizing: border-box; }
+body {
+  background-color: var(--bg);
+  background-image: radial-gradient(70% 40% at 90% 0%, var(--glow-a) 0%, transparent 70%), radial-gradient(60% 40% at 0% 100%, var(--glow-b) 0%, transparent 70%);
+  background-attachment: fixed;
+  color: var(--ink); font-family: var(--font); font-size: 16px; line-height: 1.45; font-weight: 600;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  -webkit-tap-highlight-color: transparent;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+button { font: inherit; color: inherit; cursor: pointer; border: 0; background: none; }
+button:focus-visible { outline: 3px solid var(--ac); outline-offset: 2px; }
+#app { max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; }
+sub, sup { line-height: 0; }
+h1, h2, h3, p { margin: 0; }
+
+/* Faner */
+.screen { display: flex; flex-direction: column; gap: 14px; padding-block: 22px 120px; }
+.head { display: flex; align-items: center; gap: 12px; }
+.head svg { width: 46px; height: auto; flex: none; }
+.head h1 { font-size: 28px; font-weight: 900; line-height: 1.05; letter-spacing: -0.01em; }
+.head p { color: var(--soft); font-size: 14px; font-weight: 700; }
+.sec { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); font-weight: 800; margin-top: 8px; }
+.surf { background: var(--surf); border: 1px solid var(--line); border-radius: 26px; padding: 18px; }
+
+.big-go { position: relative; overflow: hidden; width: 100%; text-align: left; background: var(--ac); color: var(--ac-ink); border-radius: 28px; padding: 22px; display: flex; align-items: center; justify-content: space-between; gap: 12px; box-shadow: 0 14px 34px rgba(0,0,0,.28); }
+.big-go::after { content: ""; position: absolute; right: -30px; top: -40px; width: 150px; height: 150px; border-radius: 50%; background: rgba(255,255,255,.28); }
+.big-go b { display: block; font-size: 24px; font-weight: 900; line-height: 1.1; }
+.big-go span { font-size: 14px; font-weight: 700; opacity: .8; }
+.big-go .play { position: relative; z-index: 1; flex: none; width: 54px; height: 54px; border-radius: 50%; background: var(--ac-ink); color: var(--ac); display: grid; place-items: center; }
+.duo { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.tile { text-align: left; background: var(--surf); border: 1px solid var(--line); border-radius: 26px; padding: 16px; display: flex; flex-direction: column; gap: 2px; min-height: 96px; justify-content: flex-end; }
+.tile b { font-size: 19px; font-weight: 900; }
+.tile span { font-size: 13px; color: var(--soft); font-weight: 700; }
+.tile:hover:not([disabled]) { background: var(--surf-2); }
+.tile[disabled] { opacity: .45; cursor: default; }
+.tile .n { font-size: 30px; font-weight: 900; font-variant-numeric: tabular-nums; line-height: 1; margin-bottom: 6px; color: var(--ac); }
+.topics { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.topic { text-align: left; background: var(--surf); border: 1px solid var(--line); border-radius: 22px; padding: 14px 16px; display: flex; flex-direction: column; }
+.topic b { font-size: 15px; font-weight: 800; line-height: 1.2; }
+.topic span { font-size: 13px; color: var(--soft); font-weight: 700; font-variant-numeric: tabular-nums; }
+.topic:hover { background: var(--surf-2); }
+
+.stats3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.stat { background: var(--surf); border: 1px solid var(--line); border-radius: 22px; padding: 14px; }
+.stat b { display: block; font-size: 28px; font-weight: 900; font-variant-numeric: tabular-nums; line-height: 1.1; color: var(--ac); }
+.stat span { font-size: 12px; color: var(--soft); font-weight: 800; }
+.hm { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; margin-top: 12px; }
+.hm i { font-style: normal; text-align: center; font-size: 11px; color: var(--faint); font-weight: 800; }
+.hm button { aspect-ratio: 1; border-radius: 10px; background: rgba(255,255,255,.07); }
+.hm button.fut { opacity: .25; cursor: default; }
+.hm button.l1 { background: color-mix(in srgb, var(--ac) 30%, transparent); }
+.hm button.l2 { background: color-mix(in srgb, var(--ac) 55%, transparent); }
+.hm button.l3 { background: color-mix(in srgb, var(--ac) 80%, transparent); }
+.hm button.l4 { background: var(--ac); }
+.hm button.on { outline: 2px solid #fff; outline-offset: 1px; }
+.hmcap { margin-top: 12px; font-size: 14px; color: var(--soft); font-weight: 700; min-height: 21px; }
+.bars { display: flex; flex-direction: column; gap: 12px; margin-top: 12px; }
+.bar-row .t { display: flex; justify-content: space-between; font-size: 14px; font-weight: 800; margin-bottom: 5px; }
+.bar-row .t span { color: var(--soft); font-variant-numeric: tabular-nums; }
+.track { height: 8px; border-radius: 99px; background: rgba(255,255,255,.1); overflow: hidden; }
+.track i { display: block; height: 100%; background: var(--ac); border-radius: 99px; }
+.fixes { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+.fix { background: rgba(255,255,255,.07); border-radius: 18px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.fix .f { font-weight: 900; font-size: 18px; }
+.fix .s { font-size: 12px; color: var(--soft); font-weight: 700; }
+.fix .a { font-weight: 900; font-size: 18px; color: var(--ac); font-variant-numeric: tabular-nums; }
+.empty { color: var(--soft); font-size: 14px; margin-top: 10px; }
+.go { width: 100%; margin-top: 14px; min-height: 50px; border-radius: 16px; background: var(--ac); color: var(--ac-ink); font-weight: 900; }
+
+.skins { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px; }
+.skin { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; font-weight: 800; color: var(--soft); }
+.skin i { width: 100%; max-width: 64px; aspect-ratio: 1; border-radius: 50%; border: 3px solid transparent; display: block; }
+.skin.on { color: #fff; } .skin.on i { border-color: #fff; }
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background: rgba(255,255,255,.07); border-radius: 18px; padding: 5px; margin-top: 12px; }
+.seg button { min-height: 44px; border-radius: 14px; font-weight: 900; color: var(--soft); }
+.seg button.on { background: var(--ac); color: var(--ac-ink); }
+.danger { width: 100%; margin-top: 12px; min-height: 50px; border-radius: 16px; font-weight: 900; background: rgba(255,255,255,.08); }
+.danger.sure { background: var(--bad); color: #fff; }
+.note-s { font-size: 13px; color: var(--soft); margin-top: 10px; font-weight: 700; }
+
+/* Hjælpeark */
+.hint { text-align: left; width: 100%; background: var(--surf); border: 1px dashed var(--ac); border-radius: 22px; padding: 14px 16px; display: flex; flex-direction: column; }
+.hint b { font-weight: 900; font-size: 16px; color: var(--ac); }
+.hint span { font-size: 13px; color: var(--soft); font-weight: 700; }
+.steps { list-style: none; padding: 0; margin: 12px 0 0; display: flex; flex-direction: column; gap: 10px; counter-reset: s; }
+.steps li { counter-increment: s; display: flex; gap: 12px; align-items: flex-start; font-weight: 700; }
+.steps li::before { content: counter(s); flex: none; width: 26px; height: 26px; border-radius: 50%; background: var(--ac); color: var(--ac-ink); display: grid; place-items: center; font-weight: 900; font-size: 14px; }
+.steps li span { padding-top: 1px; }
+.wrap { overflow-x: auto; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 8px; }
+.tbl th { text-align: left; font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); font-weight: 800; padding: 6px 6px 6px 0; }
+.tbl td { padding: 9px 6px 9px 0; border-top: 1px solid var(--line); vertical-align: top; font-weight: 700; }
+.tbl td.ox { font-weight: 900; color: var(--ac); white-space: nowrap; font-variant-numeric: tabular-nums; }
+.tbl td.at { font-weight: 900; white-space: nowrap; }
+.tbl td:last-child { color: var(--soft); padding-right: 0; }
+.ex { background: rgba(255,255,255,.07); border-radius: 18px; padding: 12px 14px; margin-top: 10px; font-weight: 800; font-variant-numeric: tabular-nums; }
+.ex small { display: block; color: var(--soft); font-weight: 700; font-size: 13px; margin-bottom: 2px; }
+.en { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+.en div { display: grid; grid-template-columns: 30px 44px 1fr; align-items: center; gap: 8px; font-weight: 800; font-size: 14px; font-variant-numeric: tabular-nums; padding: 3px 6px; border-radius: 10px; }
+.en div b { font-weight: 900; }
+.en div span { color: var(--soft); text-align: right; }
+.en div i { display: block; height: 8px; border-radius: 99px; background: var(--ac); opacity: .55; }
+.en div.h { background: rgba(255,255,255,.12); }
+.en div.h i { opacity: 1; }
+.lead { color: var(--soft); font-size: 14px; font-weight: 700; margin-top: 8px; }
+.oxr { display: grid; grid-template-columns: 52px 1fr; gap: 8px; padding: 7px 0; border-top: 1px solid var(--line); font-size: 14px; font-weight: 700; }
+.oxr b { color: var(--ac); font-weight: 900; font-variant-numeric: tabular-nums; }
+.eltitle { font-size: 18px; font-weight: 900; margin: 0 0 4px; }
+.eltitle small { color: var(--soft); font-size: 13px; font-weight: 700; margin-left: 6px; }
+.tips { margin: 10px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 6px; font-weight: 700; font-size: 14px; }
+.tips sub, .ex sub, .tbl sub, .oxr sub { font-size: .75em; }
+
+/* Svævende menu */
+.nav { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); width: min(calc(100% - 32px), 440px); z-index: 20; background: var(--nav); border-radius: 30px; padding: 7px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; box-shadow: 0 16px 40px rgba(0,0,0,.4); }
+.nav button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 9px 4px 8px; border-radius: 24px; color: var(--nav-ink); font-size: 12px; font-weight: 800; }
+.nav button.on { background: var(--ac); color: var(--ac-ink); }
+.nav button:hover:not(.on) { background: rgba(0,0,0,.05); }
+
+/* Spørgsmål */
+.stage { display: flex; flex-direction: column; flex: 1; }
+.qtop { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; padding-block: 16px 12px; }
+.timer { justify-self: start; display: inline-flex; align-items: center; gap: 6px; font-weight: 900; font-variant-numeric: tabular-nums; color: var(--soft); }
+.qnum { color: var(--soft); font-weight: 800; font-size: 14px; font-variant-numeric: tabular-nums; }
+.x { justify-self: end; width: 40px; height: 40px; border-radius: 14px; display: grid; place-items: center; background: var(--surf-2); }
+.prog { height: 6px; background: rgba(255,255,255,.14); border-radius: 99px; overflow: hidden; }
+.prog i { display: block; height: 100%; background: var(--ac); border-radius: 99px; transition: width .25s; }
+.qbody { display: flex; flex-direction: column; gap: 16px; padding-block: 18px 20px; flex: 1; }
+.qbody h2 { font-size: clamp(22px, 5.6vw, 28px); font-weight: 900; line-height: 1.2; text-align: center; text-wrap: balance; }
+.note { background: var(--paper); border-radius: 24px; min-height: 130px; display: grid; place-items: center; padding: 20px 12px; box-shadow: 0 10px 30px rgba(5,4,40,.35); overflow: hidden; }
+.note span { font-family: var(--hand); color: var(--marker); font-size: clamp(40px, 13vw, 64px); line-height: 1.2; white-space: nowrap; }
+.note sub { font-size: .62em; vertical-align: -0.28em; }
+.note sup { font-size: .55em; vertical-align: 0.8em; margin-left: 1px; }
+.ag { display: flex; flex-direction: column; gap: 6px; }
+.ag label { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+.chips { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 6px; }
+.chip { min-height: 52px; border-radius: 16px; background: var(--pill); color: var(--pill-ink); font-weight: 900; font-size: 15px; font-variant-numeric: tabular-nums; display: grid; place-items: center; padding: 0 2px; box-shadow: 0 3px 0 rgba(0,0,0,.3); }
+.chip.zero { grid-column: span 7; }
+.chip:hover:not([disabled]) { background: var(--pill-hover); }
+.chip.sel { background: var(--ac); color: var(--ac-ink); }
+.chip.correct { background: var(--ok); color: #fff; }
+.chip.wrong { background: var(--bad); color: #fff; }
+.chip.dim { opacity: .4; }
+.chip[disabled] { cursor: default; }
+.answers { display: flex; flex-direction: column; gap: 12px; }
+.fb { border-radius: 22px; padding: 14px 16px; display: flex; flex-direction: column; gap: 6px; color: var(--card-ink); }
+.fb.ok { background: var(--ok-bg); } .fb.no { background: var(--bad-bg); }
+.fb b { font-size: 18px; font-weight: 900; }
+.fb.ok b { color: var(--ok); } .fb.no b { color: var(--bad); }
+.fb p { font-size: 15px; font-weight: 700; }
+.fb .eq { font-variant-numeric: tabular-nums; font-weight: 900; }
+.bottom { position: sticky; bottom: 0; background: var(--bg); border-top: 1px solid rgba(255,255,255,.08); padding-block: 12px 14px; display: flex; gap: 10px; margin-inline: calc(-1 * max(16px, env(safe-area-inset-left, 0px))); padding-inline: max(16px, env(safe-area-inset-left, 0px)); }
+.btn { flex: 1; min-height: 56px; border-radius: 18px; background: var(--ac); color: var(--ac-ink); font-weight: 900; font-size: 17px; }
+.btn:hover:not([disabled]) { filter: brightness(1.06); }
+.btn[disabled] { opacity: .35; cursor: default; }
+.btn.ghost { flex: none; padding: 0 20px; background: var(--surf-2); color: #fff; }
+
+/* Resultat */
+.res { display: flex; flex-direction: column; gap: 18px; padding-block: 36px 28px; }
+.score { text-align: center; padding-block: 8px; }
+.score .big { font-size: 80px; font-weight: 900; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; line-height: 1; }
+.score .big small { font-size: 28px; color: var(--soft); font-weight: 800; }
+.score p { margin-top: 8px; color: var(--soft); font-weight: 800; font-size: 17px; }
+.actions { display: flex; flex-direction: column; gap: 10px; }
+.actions .btn { flex: none; width: 100%; }
+.actions .btn.alt { background: var(--surf-2); color: #fff; }
+@media (max-width: 380px) { .chip { font-size: 13px; min-height: 48px; } }
+@media (prefers-reduced-motion: reduce) { .prog i { transition: none; } }
+</style>
+
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+// Format: formel|grundstof|oxidationstal|kendte oxidationstal (valgfri)
+const RAW = `
+O2|O|0
+O3|O|0
+N2|N|0
+H2|H|0
+F2|F|0
+Cl2|Cl|0
+Br2|Br|0
+I2|I|0
+S8|S|0
+P4|P|0
+C|C|0
+Fe|Fe|0
+Na|Na|0
+Cu|Cu|0
+Zn|Zn|0
+Mg|Mg|0
+Al|Al|0
+Ag|Ag|0
+Ca|Ca|0
+Mn|Mn|0
+H2O|H|1
+HCl|H|1
+NH3|H|1|N:-3
+CH4|H|1|C:-4
+H2SO4|H|1|S:6
+H2S|H|1|S:-2
+HNO3|H|1|N:5
+H3PO4|H|1|P:5
+NH4^+|H|1|N:-3
+H2O2|H|1|O:-1
+NaH|H|-1
+CaH2|H|-1
+LiH|H|-1
+SiH4|H|-1|Si:4
+H2O|O|-2
+CO2|O|-2|C:4
+MgO|O|-2
+SO4^2-|O|-2|S:6
+Fe2O3|O|-2|Fe:3
+KMnO4|O|-2|Mn:7
+H2O2|O|-1
+Na2O2|O|-1
+OF2|O|2
+NO3^-|N|5
+NO2^-|N|3
+NO|N|2
+NO2|N|4
+N2O|N|1
+N2O3|N|3
+N2O5|N|5
+NH3|N|-3
+NH4^+|N|-3
+N2H4|N|-2
+NH2OH|N|-1
+HNO3|N|5
+HNO2|N|3
+NaNO3|N|5
+MnO4^-|Mn|7
+MnO2|Mn|4
+Mn^2+|Mn|2
+KMnO4|Mn|7
+MnO4^2-|Mn|6
+Mn2O3|Mn|3
+MnO|Mn|2
+MnSO4|Mn|2|S:6
+H2SO4|S|6
+SO2|S|4
+SO3|S|6
+H2S|S|-2
+SO4^2-|S|6
+SO3^2-|S|4
+S^2-|S|-2
+Na2S|S|-2
+H2SO3|S|4
+S2O3^2-|S|2
+SF6|S|6
+Na2SO4|S|6
+HCl|Cl|-1
+ClO^-|Cl|1
+ClO2^-|Cl|3
+ClO3^-|Cl|5
+ClO4^-|Cl|7
+HClO4|Cl|7
+NaCl|Cl|-1
+Cl2O7|Cl|7
+HClO|Cl|1
+KClO3|Cl|5
+Cl2O|Cl|1
+BrO3^-|Br|5
+BrO^-|Br|1
+HBrO|Br|1
+Br^-|Br|-1
+IO3^-|I|5
+IO4^-|I|7
+HIO3|I|5
+KI|I|-1
+HF|F|-1
+F^-|F|-1
+CO2|C|4
+CO|C|2
+CH4|C|-4
+CH3OH|C|-2
+HCOOH|C|2
+CO3^2-|C|4
+HCO3^-|C|4
+C2H6|C|-3
+C2H4|C|-2
+C2H2|C|-1
+C6H12O6|C|0
+CCl4|C|4
+C2O4^2-|C|3
+CaCO3|C|4
+Cr2O7^2-|Cr|6
+CrO4^2-|Cr|6
+Cr^3+|Cr|3
+Cr2O3|Cr|3
+CrO3|Cr|6
+K2Cr2O7|Cr|6
+Fe2O3|Fe|3
+FeO|Fe|2
+Fe^3+|Fe|3
+Fe^2+|Fe|2
+FeCl3|Fe|3
+FeSO4|Fe|2|S:6
+Fe(OH)3|Fe|3
+Cu^2+|Cu|2
+Cu^+|Cu|1
+CuO|Cu|2
+Cu2O|Cu|1
+CuSO4|Cu|2|S:6
+Al^3+|Al|3
+Al2O3|Al|3
+AgCl|Ag|1
+Ag^+|Ag|1
+PbO2|Pb|4
+PbSO4|Pb|2|S:6
+Sn^2+|Sn|2
+SnCl4|Sn|4
+Zn^2+|Zn|2
+ZnO|Zn|2
+HgO|Hg|2
+HgCl2|Hg|2
+Au^3+|Au|3
+AuCl3|Au|3
+Ni^2+|Ni|2
+Na^+|Na|1
+K^+|K|1
+NaOH|Na|1
+Mg^2+|Mg|2
+MgCl2|Mg|2
+Ca^2+|Ca|2
+CaCl2|Ca|2
+CaCO3|Ca|2|C:4
+H3PO4|P|5
+PO4^3-|P|5
+HPO4^2-|P|5
+PH3|P|-3
+P4O10|P|5
+H3PO3|P|3
+PCl3|P|3
+PCl5|P|5
+SiO2|Si|4
+SiCl4|Si|4
+SiH4|Si|4|H:-1
+TiO2|Ti|4
+V2O5|V|5
+VO2^+|V|5
+H3AsO4|As|5
+H2SeO4|Se|6
+SeO3^2-|Se|4
+`;
+
+const DEF = {H:1,O:-2,F:-1,Li:1,Na:1,K:1,Mg:2,Ca:2,Ba:2,Al:3,Zn:2,Ag:1,Cl:-1,Br:-1,I:-1};
+const NAVN = {H:'hydrogen',O:'oxygen',N:'nitrogen',C:'kulstof',S:'svovl',Cl:'chlor',Mn:'mangan',Cr:'chrom',Fe:'jern',Cu:'kobber',Al:'aluminium',Zn:'zink',Ag:'sølv',Pb:'bly',Sn:'tin',Hg:'kviksølv',P:'fosfor',Br:'brom',I:'iod',Si:'silicium',Ti:'titan',V:'vanadium',As:'arsen',Se:'selen',Na:'natrium',Ca:'calcium',Mg:'magnesium',K:'kalium',Li:'lithium',Ni:'nikkel',Au:'guld',F:'fluor'};
+
+function parseFormula(f) {
+  let i = 0;
+  const num = () => { let s = ''; while (i < f.length && /\d/.test(f[i])) s += f[i++]; return s ? +s : 1; };
+  function grp() {
+    const m = {};
+    while (i < f.length) {
+      const c = f[i];
+      if (c === '(') { i++; const g = grp(); const n = num(); for (const k in g) m[k] = (m[k] || 0) + g[k] * n; }
+      else if (c === ')') { i++; return m; }
+      else if (/[A-Z]/.test(c)) { let el = c; i++; if (i < f.length && /[a-z]/.test(f[i])) el += f[i++]; const n = num(); m[el] = (m[el] || 0) + n; }
+      else i++;
+    }
+    return m;
+  }
+  return grp();
+}
+function parseCharge(s) {
+  if (!s) return 0;
+  const sign = s.includes('-') ? -1 : 1;
+  const d = parseInt(s.replace(/[+-]/g, ''), 10) || 1;
+  return sign * d;
+}
+function build(line, id) {
+  const [formula, el, ans, ovs] = line.split('|');
+  const [f, ch] = formula.split('^');
+  const counts = parseFormula(f);
+  const ov = {};
+  if (ovs) ovs.split(',').forEach(p => { const [k, v] = p.split(':'); ov[k] = +v; });
+  const charge = parseCharge(ch);
+  let sum = 0;
+  const known = {};
+  for (const k in counts) {
+    if (k === el) continue;
+    const ox = k in ov ? ov[k] : DEF[k];
+    if (ox === undefined) throw new Error('Ukendt oxidationstal for ' + k + ' i ' + formula);
+    known[k] = ox; sum += counts[k] * ox;
+  }
+  const x = (charge - sum) / counts[el];
+  if (!Number.isInteger(x) || x !== +ans) throw new Error('Fejl i ' + formula + ' (' + el + '): beregnet ' + x + ', angivet ' + ans);
+  return { id, formula, f, charge, chargeStr: ch || '', el, ans: +ans, counts, known };
+}
+const QUESTIONS = RAW.trim().split('\n').map((l, i) => build(l, i));
+
+</script>
+<script>
+const R = ['0','I','II','III','IV','V','VI','VII','VIII'];
+const lab = n => n === 0 ? '0' : (n > 0 ? '+' : '−') + R[Math.abs(n)];
+const KEY = 'oxtal-traener-v1';
+const svg = (p, s) => `<svg width="${s || 22}" height="${s || 22}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${p}</svg>`;
+const ICON = {
+  clock: svg('<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/>', 18),
+  x: svg('<path d="M6 6l12 12M18 6L6 18"/>', 18),
+  play: svg('<path d="M7 4.5v15l12-7.5z" fill="currentColor"/>', 24),
+  tOva: svg('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/>', 24),
+  tOver: svg('<rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/>', 24),
+  tRegler: svg('<path d="M4 5.5A2.5 2.5 0 016.5 3H20v16H6.5A2.5 2.5 0 004 21.5z"/><path d="M4 21.5V5.5M8.5 8h7M8.5 12h5"/>', 24),
+  tKonto: svg('<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/>', 24),
+  flask: '<svg viewBox="0 0 220 210" aria-hidden="true"><path d="M92 44h36v44l50 78q8 18-12 18H54q-20 0-12-18l50-78z" fill="rgba(255,255,255,.14)" stroke="#fff" stroke-width="9" stroke-linejoin="round"/><path d="M68 132h84l26 40q8 14-10 14H52q-18 0-10-14z" fill="var(--ac)"/><rect x="82" y="36" width="56" height="14" rx="7" fill="#fff"/></svg>'
+};
+
+/* Gemte data */
+let store = { ans: 0, ok: 0, wrong: [], days: {}, cats: {}, skin: 'indigo', len: 20 };
+try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && Array.isArray(s.wrong)) store = Object.assign(store, s); } catch (e) {}
+const save = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} };
+const dkey = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+function applySkin() { document.documentElement.setAttribute('data-skin', store.skin); }
+applySkin();
+
+/* Emner */
+function catOf(q) {
+  const keys = Object.keys(q.counts);
+  if (keys.length === 1 && q.charge === 0) return 'Grundstoffer';
+  if (['H','O'].includes(q.el)) return 'Hydrogen og oxygen';
+  if (q.el === 'N') return 'Nitrogen';
+  if (q.el === 'S') return 'Svovl';
+  if (['F','Cl','Br','I'].includes(q.el)) return 'Halogener';
+  if (q.el === 'C') return 'Kulstof';
+  if (['P','Si','As','Se'].includes(q.el)) return 'Fosfor m.fl.';
+  return 'Metaller';
+}
+const CATS = ['Grundstoffer','Hydrogen og oxygen','Nitrogen','Svovl','Halogener','Kulstof','Metaller','Fosfor m.fl.'];
+const catCount = c => QUESTIONS.filter(q => catOf(q) === c).length;
+
+function record(q, correct) {
+  store.ans++; if (correct) store.ok++;
+  const k = dkey(new Date()); store.days[k] = (store.days[k] || 0) + 1;
+  const c = catOf(q); const e = store.cats[c] || [0, 0]; e[0]++; if (correct) e[1]++; store.cats[c] = e;
+  const has = store.wrong.includes(q.id);
+  if (correct && has) store.wrong = store.wrong.filter(x => x !== q.id);
+  if (!correct && !has) store.wrong.push(q.id);
+  save();
+}
+
+/* Hjælpere */
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+function formulaHtml(q) {
+  let h = q.f.replace(/(\d+)/g, '<sub>$1</sub>');
+  if (q.chargeStr) h += '<sup>' + q.chargeStr.replace('-', '−') + '</sup>';
+  return h;
+}
+const elName = q => NAVN[q.el] + ' (' + q.el + ')';
+function explain(q) {
+  const keys = Object.keys(q.counts);
+  if (keys.length === 1 && q.charge === 0) return '<p>Et grundstof i ren form har oxidationstal <b>0</b>.</p>';
+  if (keys.length === 1 && q.counts[q.el] === 1) return '<p>En ion med ét atom har oxidationstal lig med ladningen: <b>' + lab(q.charge) + '</b>.</p>';
+  const known = Object.keys(q.known).map(k => k + ' ' + lab(q.known[k])).join(', ');
+  const terms = keys.map(k => {
+    const n = q.counts[k], pre = n > 1 ? n + '·' : '';
+    return k === q.el ? pre + 'x' : pre + '(' + lab(q.known[k]) + ')';
+  }).join(' + ');
+  let extra = '';
+  if (q.el === 'H' && q.ans === -1) extra = '<p>I en hydrid er H −I, fordi det andet atom (et metal eller Si) trækker mindre i elektronerne end H.</p>';
+  if (q.known.H === -1 && q.el !== 'H') extra = '<p>H er −I her, fordi ' + q.el + ' trækker mindre i elektronerne end H. I ' + fm('CH4') + ' er det omvendt, så der er C −IV.</p>';
+  if (q.el === 'O' && q.ans === -1) extra = '<p>I et peroxid er O −I, ikke −II.</p>';
+  if (q.el === 'O' && q.ans === 2) extra = '<p>F er mere elektronegativ end O, så her er O +II.</p>';
+  if (q.formula === 'H2O2' && q.el === 'H') extra = '<p>Peroxid: O er −I, H er +I.</p>';
+  return '<p>Summen af oxidationstallene skal give ladningen. Kendt: ' + known + '.</p>' +
+    '<p class="eq">' + terms + ' = ' + lab(q.charge) + ' &nbsp;→&nbsp; x = ' + lab(q.ans) + '</p>' + extra;
+}
+const mmss = ms => { const s = Math.floor(ms / 1000); return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); };
+const DAG = ['søn','man','tir','ons','tor','fre','lør'], MD = ['jan','feb','mar','apr','maj','jun','jul','aug','sep','okt','nov','dec'];
+
+/* Tilstand */
+let S = { screen: 'tabs', tab: 'ova', hm: null, sure: false };
+const app = document.getElementById('app');
+
+function start(mode, ids, tag) {
+  S = { screen: 'quiz', mode, tag: tag || '', qs: ids, i: 0, picks: [], t0: Date.now(), tab: S.tab };
+  render(true);
+}
+function startPractice(cat) {
+  const pool = QUESTIONS.filter(q => !cat || catOf(q) === cat).map(q => q.id);
+  start('practice', shuffle(pool).slice(0, store.len), cat || 'Øvelse');
+}
+function startTest() { start('test', shuffle(QUESTIONS.map(q => q.id)).slice(0, store.len), 'Prøve'); }
+function startWrong() { if (store.wrong.length) start('practice', shuffle(store.wrong).slice(0, store.len), 'Mine fejl'); }
+function finish() {
+  if (S.mode === 'test') S.qs.forEach((id, k) => record(QUESTIONS[id], S.picks[k] === QUESTIONS[id].ans));
+  S.dur = Date.now() - S.t0; S.screen = 'result'; render(true);
+}
+function toTabs(tab) { S = { screen: 'tabs', tab: tab || S.tab || 'ova', hm: null, sure: false }; render(true); }
+
+/* Visning */
+function render(top) {
+  if (S.screen === 'tabs') app.innerHTML = tabs();
+  else if (S.screen === 'quiz') app.innerHTML = quiz();
+  else app.innerHTML = result();
+  if (top) window.scrollTo(0, 0);
+}
+
+function nav() {
+  const t = (id, ic, name) => `<button class="${S.tab === id ? 'on' : ''}" data-a="tab" data-t="${id}" aria-label="${name}" ${S.tab === id ? 'aria-current="page"' : ''}>${ic}${name}</button>`;
+  return `<nav class="nav">${t('ova', ICON.tOva, 'Øv')}${t('over', ICON.tOver, 'Overblik')}${t('regler', ICON.tRegler, 'Regler')}${t('konto', ICON.tKonto, 'Konto')}</nav>`;
+}
+function tabs() {
+  const body = S.tab === 'ova' ? tabOva() : S.tab === 'over' ? tabOver() : S.tab === 'regler' ? tabRegler() : tabKonto();
+  return `<div class="screen">${body}</div>${nav()}`;
+}
+
+function tabOva() {
+  const w = store.wrong.length;
+  return `<div class="head">${ICON.flask}<div><h1>Oxidationstal</h1><p>${QUESTIONS.length} spørgsmål til kemi</p></div></div>
+    ${store.ans === 0 ? '<button class="hint" data-a="tab" data-t="regler"><b>Ny her? Læs reglerne først</b><span>Et kort hjælpeark med faste tal og regnetrin.</span></button>' : ''}
+    <button class="big-go" data-a="practice"><span><b>Start øvelse</b><span>${store.len} tilfældige. Du ser svaret med det samme.</span></span><span class="play">${ICON.play}</span></button>
+    <div class="duo">
+      <button class="tile" data-a="test"><b>Prøve</b><span>${store.len} spørgsmål, resultat til sidst</span></button>
+      <button class="tile" data-a="wrong" ${w ? '' : 'disabled'}><b>Mine fejl</b><span>${w ? w + ' at øve igen' : 'Ingen endnu'}</span></button>
+    </div>
+    <h2 class="sec">Øv et emne</h2>
+    <div class="topics">${CATS.map(c => `<button class="topic" data-a="cat" data-c="${c}"><b>${c}</b><span>${catCount(c)} spørgsmål</span></button>`).join('')}</div>`;
+}
+
+const fm = s => { const [f, c] = s.split('^'); let h = f.replace(/(\d+)/g, '<sub>$1</sub>'); if (c) h += '<sup>' + c.replace('-', '\u2212') + '</sup>'; return h; };
+const fl = list => list.split(' ').map(fm).join(', ');
+const TYP = [
+  ['Nitrogen', 'N', [['\u2212III','NH3 NH4^+'],['\u2212II','N2H4'],['\u2212I','NH2OH'],['0','N2'],['+I','N2O'],['+II','NO'],['+III','NO2^- HNO2'],['+IV','NO2'],['+V','NO3^- HNO3 N2O5']]],
+  ['Svovl', 'S', [['\u2212II','H2S S^2-'],['0','S8'],['+II','S2O3^2-'],['+IV','SO2 SO3^2-'],['+VI','SO3 SO4^2- H2SO4']]],
+  ['Chlor', 'Cl', [['\u2212I','HCl Cl^-'],['0','Cl2'],['+I','ClO^- HClO'],['+III','ClO2^-'],['+V','ClO3^-'],['+VII','ClO4^- HClO4']]],
+  ['Mangan', 'Mn', [['0','Mn'],['+II','Mn^2+'],['+III','Mn2O3'],['+IV','MnO2'],['+VI','MnO4^2-'],['+VII','MnO4^- KMnO4']]],
+  ['Chrom', 'Cr', [['0','Cr'],['+III','Cr^3+ Cr2O3'],['+VI','CrO4^2- Cr2O7^2-']]],
+  ['Kulstof', 'C', [['\u2212IV','CH4'],['\u2212III','C2H6'],['\u2212II','CH3OH C2H4'],['\u2212I','C2H2'],['0','C6H12O6'],['+II','CO HCOOH'],['+III','C2O4^2-'],['+IV','CO2 CO3^2-']]],
+  ['Jern', 'Fe', [['0','Fe'],['+II','FeO Fe^2+'],['+III','Fe2O3 Fe^3+']]],
+  ['Kobber', 'Cu', [['0','Cu'],['+I','Cu2O Cu^+'],['+II','CuO Cu^2+']]]
+];
+const EN = [['F',3.98],['O',3.44],['Cl',3.16],['N',3.04],['Br',2.96],['I',2.66],['S',2.58],['C',2.55],['H',2.20],['P',2.19],['Si',1.90],['Cu',1.90],['Fe',1.83],['Al',1.61],['Mn',1.55],['Mg',1.31],['Ca',1.00],['Li',0.98],['Na',0.93],['K',0.82]];
+function tabRegler() {
+  const fixed = [['Li, Na, K','+I','–'],['Mg, Ca, Ba','+II','–'],['Al','+III','–'],['Zn','+II','–'],['Ag','+I','–'],['F','\u2212I','Altid'],
+    ['H','+I','\u2212I i hydrider: ' + fl('NaH CaH2 SiH4')],['O','\u2212II','\u2212I i peroxider: ' + fl('H2O2 Na2O2') + '. +II i ' + fm('OF2')],['Cl, Br, I','\u2212I','Positive sammen med O: ' + fl('ClO3^- IO4^-')]];
+  const ends = [['N',5,'+V','\u2212III'],['P',5,'+V','\u2212III'],['S',6,'+VI','\u2212II'],['Cl',7,'+VII','\u2212I'],['C',4,'+IV','\u2212IV']];
+  return `<div class="head"><div><h1>Regler</h1><p>Læs det her, før du går i gang</p></div></div>
+    <div class="surf"><h2 class="sec" style="margin:0">4 grundregler</h2>
+      <ol class="steps">
+        <li><span>Et grundstof i ren form har oxidationstal <b>0</b> (${fl('O2 Fe S8')}).</span></li>
+        <li><span>En ion med ét atom har oxidationstal lig med ladningen (${fm('Fe^3+')} er +III, ${fm('Cl^-')} er \u2212I).</span></li>
+        <li><span>Alle oxidationstal lagt sammen giver den samlede ladning. Et molekyle giver 0.</span></li>
+        <li><span>Det atom, der trækker mest i elektronerne, får det negative tal.</span></li></ol></div>
+    <div class="surf"><h2 class="sec" style="margin:0">Faste tal, der skal sidde</h2>
+      <div class="wrap"><table class="tbl"><tr><th>Atom</th><th>Tal</th><th>Undtagelse</th></tr>
+      ${fixed.map(r => `<tr><td class="at">${r[0]}</td><td class="ox">${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</table></div></div>
+    <div class="surf"><h2 class="sec" style="margin:0">Sådan regner du</h2>
+      <ol class="steps"><li><span>Skriv den samlede ladning ned.</span></li><li><span>Sæt de faste tal ind. Husk at gange med antal atomer.</span></li><li><span>Løs for x.</span></li></ol>
+      <div class="ex"><small>${fm('MnO4^-')}, find Mn</small>x + 4·(\u2212II) = \u2212I &nbsp;\u2192&nbsp; x = +VII</div>
+      <div class="ex"><small>${fm('Cr2O7^2-')}, find Cr</small>2x + 7·(\u2212II) = \u2212II &nbsp;\u2192&nbsp; 2x = +XII &nbsp;\u2192&nbsp; x = +VI</div>
+      <div class="ex"><small>${fm('H2SO4')}, find S</small>2·(+I) + x + 4·(\u2212II) = 0 &nbsp;\u2192&nbsp; x = +VI</div>
+      <p class="lead">Romertal: I = 1, V = 5, X = 10. Så +VII er +7 og +XII er +12.</p></div>
+    <div class="surf"><h2 class="sec" style="margin:0">Største og mindste tal</h2>
+      <p class="lead">Højest er antal yderelektroner. Lavest er antal yderelektroner minus 8.</p>
+      <div class="wrap"><table class="tbl"><tr><th>Atom</th><th>Yderel.</th><th>Højest</th><th>Lavest</th></tr>
+      ${ends.map(r => `<tr><td class="at">${r[0]}</td><td>${r[1]}</td><td class="ox">${r[2]}</td><td class="ox">${r[3]}</td></tr>`).join('')}</table></div>
+      <p class="lead">Mangan er en særlig sag: højest +VII.</p></div>
+    <div class="surf"><h2 class="sec" style="margin:0">Elektronegativitet</h2>
+      <p class="lead">Højeste tal trækker mest i elektronerne og får det negative oxidationstal. H er skillelinjen: Over H får H +I. Under H får H \u2212I.</p>
+      <div class="en">${EN.map(r => `<div class="${r[0] === 'H' ? 'h' : ''}"><b>${r[0]}</b><span>${r[1].toFixed(2).replace('.', ',')}</span><i style="width:${r[1] / 3.98 * 100}%"></i></div>`).join('')}</div>
+      <p class="lead">${fm('PH3')}: P og H er næsten ens (2,19 og 2,20). Her sætter man P til \u2212III.</p></div>
+    <h2 class="sec">Typiske tal pr. grundstof</h2>
+    ${TYP.map(e => `<div class="surf"><h3 class="eltitle">${e[0]}<small>${e[1]}</small></h3>${e[2].map(r => `<div class="oxr"><b>${r[0]}</b><span>${fl(r[1])}</span></div>`).join('')}</div>`).join('')}
+    <div class="surf"><h2 class="sec" style="margin:0">Oxidation og reduktion</h2>
+      <div class="wrap"><table class="tbl"><tr><th></th><th>Oxidationstal</th><th>Elektroner</th></tr>
+      <tr><td class="at">Oxidation</td><td class="ox">Stiger</td><td>Afgives</td></tr>
+      <tr><td class="at">Reduktion</td><td class="ox">Falder</td><td>Optages</td></tr></table></div>
+      <p class="lead">Det stof, der oxideres, er reduktionsmidlet. Det stof, der reduceres, er oxidationsmidlet.</p></div>
+    <div class="surf"><h2 class="sec" style="margin:0">Typiske fælder</h2>
+      <ul class="tips">
+        <li>${fm('H2O2')}: O er \u2212I, ikke \u2212II.</li>
+        <li>${fm('NaH')} og ${fm('SiH4')}: H er \u2212I, fordi det andet atom trækker mindre end H.</li>
+        <li>${fm('CH4')} giver C \u2212IV, men ${fm('SiH4')} giver Si +IV.</li>
+        <li>${fm('OF2')}: O er +II, fordi F vinder over O.</li>
+        <li>${fm('Cr2O7^2-')}: Der er <b>to</b> Cr, så regn 2x.</li>
+        <li>${fm('S2O3^2-')}: To S, der giver +II hver (gennemsnit).</li>
+        <li>Tjek altid ladningen på en ion, før du regner.</li></ul></div>`;
+}
+
+function streak() {
+  const d = new Date(); let n = 0;
+  if (!store.days[dkey(d)]) d.setDate(d.getDate() - 1);
+  while (store.days[dkey(d)]) { n++; d.setDate(d.getDate() - 1); }
+  return n;
+}
+function tabOver() {
+  const pct = store.ans ? Math.round(100 * store.ok / store.ans) : null;
+  const today = new Date(); today.setHours(0, 0, 0, 0);
+  const dow = (today.getDay() + 6) % 7;
+  const first = new Date(today); first.setDate(first.getDate() - dow - 28);
+  let cells = '';
+  for (let i = 0; i < 35; i++) {
+    const d = new Date(first); d.setDate(first.getDate() + i);
+    const k = dkey(d), c = store.days[k] || 0, fut = d > today;
+    const lv = fut ? '' : c >= 30 ? 'l4' : c >= 15 ? 'l3' : c >= 5 ? 'l2' : c >= 1 ? 'l1' : '';
+    cells += `<button class="${lv}${fut ? ' fut' : ''}${S.hm === k ? ' on' : ''}" ${fut ? 'disabled' : ''} data-a="hm" data-k="${k}" aria-label="${k}: ${c} spørgsmål"></button>`;
+  }
+  let cap = 'Tryk på en dag for at se, hvor mange spørgsmål du har svaret på.';
+  if (S.hm) { const [y, m, dd] = S.hm.split('-').map(Number); const d = new Date(y, m - 1, dd); cap = `${DAG[d.getDay()]} ${dd}. ${MD[m - 1]}: ${store.days[S.hm] || 0} spørgsmål`; }
+  const bars = CATS.map(c => {
+    const [a, o] = store.cats[c] || [0, 0]; const p = a ? Math.round(100 * o / a) : 0;
+    return `<div class="bar-row"><div class="t"><b>${c}</b><span>${a ? p + '% · ' + a : 'ikke øvet'}</span></div><div class="track"><i style="width:${p}%"></i></div></div>`;
+  }).join('');
+  const wr = store.wrong.slice(-8).reverse().map(id => { const q = QUESTIONS[id]; return `<div class="fix"><div><div class="f">${formulaHtml(q)}</div><div class="s">${NAVN[q.el]} (${q.el})</div></div><div class="a">${lab(q.ans)}</div></div>`; }).join('');
+  return `<div class="head"><div><h1>Overblik</h1><p>Din træning indtil nu</p></div></div>
+    <div class="stats3">
+      <div class="stat"><b>${store.ans}</b><span>Besvaret</span></div>
+      <div class="stat"><b>${pct === null ? '–' : pct + '%'}</b><span>Rigtige</span></div>
+      <div class="stat"><b>${streak()}</b><span>Dage i træk</span></div>
+    </div>
+    <div class="surf"><h2 class="sec" style="margin:0">Seneste 5 uger</h2>
+      <div class="hm"><i>M</i><i>T</i><i>O</i><i>T</i><i>F</i><i>L</i><i>S</i>${cells}</div>
+      <div class="hmcap">${cap}</div></div>
+    <div class="surf"><h2 class="sec" style="margin:0">Rigtige pr. emne</h2><div class="bars">${bars}</div></div>
+    <div class="surf"><h2 class="sec" style="margin:0">Skal øves</h2>
+      ${wr ? `<div class="fixes">${wr}</div><button class="go" data-a="wrong">Øv mine fejl</button>` : '<p class="empty">Ingen fejl at øve. Tag en øvelse eller en prøve, så dukker de op her.</p>'}</div>`;
+}
+
+function tabKonto() {
+  const skins = [['indigo', 'Indigo', 'linear-gradient(135deg,#4B40B4,#33DDE8)'], ['mint', 'Mint', 'linear-gradient(135deg,#145A70,#7CF2B0)'], ['sunset', 'Solnedgang', 'linear-gradient(135deg,#B8427C,#FFB26B)'], ['neon', 'Neon', 'linear-gradient(135deg,#1B1B26,#C6FF3D)']];
+  return `<div class="head"><div><h1>Konto</h1><p>Indstillinger til appen</p></div></div>
+    <div class="surf"><h2 class="sec" style="margin:0">Farvetema</h2>
+      <div class="skins">${skins.map(s => `<button class="skin ${store.skin === s[0] ? 'on' : ''}" data-a="skin" data-s="${s[0]}"><i style="background:${s[2]}"></i>${s[1]}</button>`).join('')}</div></div>
+    <div class="surf"><h2 class="sec" style="margin:0">Spørgsmål pr. runde</h2>
+      <div class="seg">${[10, 20, 30].map(n => `<button class="${store.len === n ? 'on' : ''}" data-a="len" data-n="${n}">${n}</button>`).join('')}</div></div>
+    <div class="surf"><h2 class="sec" style="margin:0">Data</h2>
+      <button class="danger ${S.sure ? 'sure' : ''}" data-a="reset">${S.sure ? 'Tryk igen for at slette alt' : 'Nulstil fremgang'}</button>
+      <p class="note-s">Dine tal gemmes kun i denne browser, ikke på en server.</p></div>`;
+}
+
+function chip(v, q, pick, revealed) {
+  let cls = 'chip' + (v === 0 ? ' zero' : '');
+  if (revealed) {
+    if (v === q.ans) cls += ' correct'; else if (v === pick) cls += ' wrong'; else cls += ' dim';
+  } else if (v === pick) cls += ' sel';
+  return `<button class="${cls}" data-a="pick" data-v="${v}" ${revealed ? 'disabled' : ''} aria-label="Oxidationstal ${lab(v)}">${lab(v)}</button>`;
+}
+
+function quiz() {
+  const q = QUESTIONS[S.qs[S.i]], n = S.qs.length;
+  const pick = S.picks[S.i];
+  const practice = S.mode === 'practice';
+  const revealed = practice && pick !== undefined;
+  const done = S.i + (revealed ? 1 : 0);
+  const pos = [1,2,3,4,5,6,7], neg = [-1,-2,-3,-4,-5,-6,-7];
+  let fb = '';
+  if (revealed) {
+    const ok = pick === q.ans;
+    fb = `<div class="fb ${ok ? 'ok' : 'no'}"><b>${ok ? 'Rigtigt' : 'Forkert. Rigtigt svar: ' + lab(q.ans)}</b>${explain(q)}</div>`;
+  }
+  const last = S.i === n - 1;
+  return `<div class="stage">
+    <div class="qtop">
+      <span class="timer">${ICON.clock}<span id="tm">${mmss(Date.now() - S.t0)}</span></span>
+      <span class="qnum">${S.tag} · ${S.i + 1} af ${n}</span>
+      <button class="x" data-a="home" aria-label="Afslut">${ICON.x}</button>
+    </div>
+    <div class="prog"><i style="width:${100 * done / n}%"></i></div>
+    <div class="qbody">
+      <h2>Hvad er oxidationstal for ${elName(q)}?</h2>
+      <div class="note"><span>${formulaHtml(q)}</span></div>
+      <div class="answers">
+        <div class="ag"><div class="chips">${chip(0, q, pick, revealed)}</div></div>
+        <div class="ag"><label>Positive</label><div class="chips">${pos.map(v => chip(v, q, pick, revealed)).join('')}</div></div>
+        <div class="ag"><label>Negative</label><div class="chips">${neg.map(v => chip(v, q, pick, revealed)).join('')}</div></div>
+        ${fb}
+      </div>
+    </div>
+    <div class="bottom">
+      ${!practice && S.i > 0 ? '<button class="btn ghost" data-a="prev">Tilbage</button>' : ''}
+      <button class="btn" data-a="next" ${pick !== undefined ? '' : 'disabled'}>${last ? 'Se resultat' : 'Næste'}</button>
+    </div>
+  </div>`;
+}
+
+function result() {
+  const n = S.qs.length;
+  const rows = S.qs.map((id, k) => ({ q: QUESTIONS[id], p: S.picks[k] }));
+  const ok = rows.filter(r => r.p === r.q.ans).length;
+  const bad = rows.filter(r => r.p !== r.q.ans);
+  const pct = Math.round(100 * ok / n);
+  const msg = pct === 100 ? 'Alle rigtige' : pct >= 80 ? 'Rigtig godt' : pct >= 50 ? 'Du er på vej' : 'Øv dig lidt mere';
+  const wrongHtml = bad.length ? `<div class="surf"><h2 class="sec" style="margin:0">Det gik galt her</h2><div class="fixes">${bad.map(r => `<div class="fix"><div><div class="f">${formulaHtml(r.q)}</div><div class="s">${NAVN[r.q.el]} (${r.q.el})${r.p === undefined ? '' : ' · du svarede ' + lab(r.p)}</div></div><div class="a">${lab(r.q.ans)}</div></div>`).join('')}</div></div>` : '';
+  return `<div class="res">
+    <div class="score"><div class="big">${ok}<small>/${n}</small></div><p>${msg} · ${pct}% · ${mmss(S.dur || 0)}</p></div>
+    ${wrongHtml}
+    <div class="actions">
+      ${bad.length ? '<button class="btn" data-a="retry">Prøv fejlene igen</button>' : ''}
+      <button class="btn alt" data-a="again">Ny runde</button>
+      <button class="btn alt" data-a="home">Til forsiden</button>
+    </div>
+  </div>`;
+}
+
+setInterval(() => { const el = document.getElementById('tm'); if (el && S.screen === 'quiz') el.textContent = mmss(Date.now() - S.t0); }, 1000);
+
+/* Klik */
+app.addEventListener('click', e => {
+  const b = e.target.closest('[data-a]'); if (!b || b.disabled) return;
+  const a = b.dataset.a;
+  if (a === 'practice') startPractice();
+  else if (a === 'test') startTest();
+  else if (a === 'wrong') startWrong();
+  else if (a === 'cat') startPractice(b.dataset.c);
+  else if (a === 'home') toTabs();
+  else if (a === 'tab') { S.tab = b.dataset.t; S.hm = null; S.sure = false; render(true); }
+  else if (a === 'hm') { S.hm = S.hm === b.dataset.k ? null : b.dataset.k; render(false); }
+  else if (a === 'skin') { store.skin = b.dataset.s; save(); applySkin(); render(false); }
+  else if (a === 'len') { store.len = +b.dataset.n; save(); render(false); }
+  else if (a === 'reset') {
+    if (!S.sure) { S.sure = true; render(false); }
+    else { store = Object.assign(store, { ans: 0, ok: 0, wrong: [], days: {}, cats: {} }); save(); S.sure = false; render(false); }
+  }
+  else if (a === 'pick') {
+    const q = QUESTIONS[S.qs[S.i]];
+    if (S.mode === 'practice' && S.picks[S.i] !== undefined) return;
+    S.picks[S.i] = +b.dataset.v;
+    if (S.mode === 'practice') record(q, S.picks[S.i] === q.ans);
+    render(false);
+    if (S.mode === 'practice') window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+  }
+  else if (a === 'next') { if (S.i < S.qs.length - 1) { S.i++; render(true); } else finish(); }
+  else if (a === 'prev') { if (S.i > 0) { S.i--; render(true); } }
+  else if (a === 'retry') {
+    const ids = S.qs.filter((id, k) => S.picks[k] !== QUESTIONS[id].ans);
+    start('practice', shuffle(ids), 'Fejl');
+  }
+  else if (a === 'again') { S.tag === 'Prøve' ? startTest() : startPractice(CATS.includes(S.tag) ? S.tag : undefined); }
+});
+render(false);
+</script>
+<script>if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) { navigator.serviceWorker.register('sw.js').catch(function () {}); }</script>
+</body>
+</html>
