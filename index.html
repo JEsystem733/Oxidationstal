@@ -13,7 +13,7 @@
 <link rel="icon" href="icon-192.png">
 <style>html{color-scheme:dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
 <title>Oxidationstal Træner</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&family=Permanent+Marker&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap">
 <style>
 /* Layout: telefon-app i én kolonne (max 480px, centreret på pc). Tre faner i en svævende lys menu i bunden. Spørgsmål fylder hele skærmen uden menu. */
 :root {
@@ -49,7 +49,7 @@ sub, sup { line-height: 0; }
 h1, h2, h3, p { margin: 0; }
 
 /* Faner */
-.screen { display: flex; flex-direction: column; gap: 14px; padding-block: 22px 120px; }
+.screen { display: flex; flex-direction: column; gap: 14px; padding-block: 22px 134px; }
 .head { display: flex; align-items: center; gap: 12px; }
 .head svg { width: 46px; height: auto; flex: none; }
 .head h1 { font-size: 28px; font-weight: 900; line-height: 1.05; letter-spacing: -0.01em; }
@@ -109,6 +109,10 @@ h1, h2, h3, p { margin: 0; }
 .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background: rgba(255,255,255,.07); border-radius: 18px; padding: 5px; margin-top: 12px; }
 .seg button { min-height: 44px; border-radius: 14px; font-weight: 900; color: var(--soft); }
 .seg button.on { background: var(--ac); color: var(--ac-ink); }
+.lenrow { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--surf); border: 1px solid var(--line); border-radius: 22px; padding: 8px 8px 8px 16px; }
+.lenrow > span { font-size: 14px; font-weight: 800; color: var(--soft); }
+.lenrow .seg { margin-top: 0; width: 168px; flex: none; }
+.lenrow .seg button { min-height: 40px; }
 .danger { width: 100%; margin-top: 12px; min-height: 50px; border-radius: 16px; font-weight: 900; background: rgba(255,255,255,.08); }
 .danger.sure { background: var(--bad); color: #fff; }
 .note-s { font-size: 13px; color: var(--soft); margin-top: 10px; font-weight: 700; }
@@ -146,10 +150,20 @@ h1, h2, h3, p { margin: 0; }
 .tips sub, .ex sub, .tbl sub, .oxr sub { font-size: .75em; }
 
 /* Svævende menu */
-.nav { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom, 0px)); width: min(calc(100% - 32px), 440px); z-index: 20; background: var(--nav); border-radius: 30px; padding: 7px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; box-shadow: 0 16px 40px rgba(0,0,0,.4); }
+.nav { position: fixed; left: 50%; transform: translateX(-50%); touch-action: none; user-select: none; -webkit-user-select: none; bottom: calc(14px + env(safe-area-inset-bottom, 0px)); width: min(calc(100% - 32px), 440px); z-index: 20; background: var(--nav); border-radius: 30px; padding: 7px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; box-shadow: 0 16px 40px rgba(0,0,0,.4); }
 .nav button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 9px 4px 8px; border-radius: 24px; color: var(--nav-ink); font-size: 12px; font-weight: 800; }
-.nav button.on { background: var(--ac); color: var(--ac-ink); }
-.nav button:hover:not(.on) { background: rgba(0,0,0,.05); }
+.nav button { position: relative; z-index: 1; transition: color .15s; }
+.nav button.on, .nav button.hot { color: var(--ac-ink); }
+.nav button svg { transition: transform .22s cubic-bezier(.34,1.56,.64,1); }
+.nav button.hot svg { transform: scale(1.22) translateY(-2px); }
+.nav .ind { position: absolute; top: 7px; bottom: 7px; left: 0; width: 0; border-radius: 24px; background: var(--ac); pointer-events: none; z-index: 0;
+  transform: translateX(var(--x, 7px)) scale(var(--s, 1)); transition: transform .45s cubic-bezier(.34,1.45,.5,1);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--ac) 40%, transparent); }
+.nav.grab .ind { --s: 1.07; transition: transform .1s linear; }
+.nav.init .ind { transition: none; }
+.screen.enter { animation: slidein .28s cubic-bezier(.2,.8,.2,1); }
+@keyframes slidein { from { opacity: 0; transform: translateX(calc(var(--dir, 1) * 28px)); } to { opacity: 1; transform: none; } }
+
 
 /* Spørgsmål */
 .stage { display: flex; flex-direction: column; flex: 1; }
@@ -162,8 +176,8 @@ h1, h2, h3, p { margin: 0; }
 .qbody { display: flex; flex-direction: column; gap: 16px; padding-block: 18px 20px; flex: 1; }
 .qbody h2 { font-size: clamp(22px, 5.6vw, 28px); font-weight: 900; line-height: 1.2; text-align: center; text-wrap: balance; }
 .note { background: var(--paper); border-radius: 24px; min-height: 130px; display: grid; place-items: center; padding: 20px 12px; box-shadow: 0 10px 30px rgba(5,4,40,.35); overflow: hidden; }
-.note span { font-family: var(--hand); color: var(--marker); font-size: clamp(40px, 13vw, 64px); line-height: 1.2; white-space: nowrap; }
-.note sub { font-size: .62em; vertical-align: -0.28em; }
+.note span { font-family: var(--font); font-weight: 800; letter-spacing: .02em; color: var(--marker); font-size: clamp(40px, 13vw, 64px); line-height: 1.2; white-space: nowrap; }
+.note sub { font-size: .6em; vertical-align: -0.2em; }
 .note sup { font-size: .55em; vertical-align: 0.8em; margin-left: 1px; }
 .ag { display: flex; flex-direction: column; gap: 6px; }
 .ag label { font-size: 12px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
@@ -198,13 +212,52 @@ h1, h2, h3, p { margin: 0; }
 .actions { display: flex; flex-direction: column; gap: 10px; }
 .actions .btn { flex: none; width: 100%; }
 .actions .btn.alt { background: var(--surf-2); color: #fff; }
+/* Åbningsanimation */
+#splash { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; cursor: pointer;
+  background-color: var(--bg);
+  background-image: radial-gradient(70% 40% at 90% 0%, var(--glow-a) 0%, transparent 70%), radial-gradient(60% 40% at 0% 100%, var(--glow-b) 0%, transparent 70%);
+  transition: opacity .45s ease, transform .45s ease; }
+#splash.out { opacity: 0; transform: scale(1.04); pointer-events: none; }
+.sp-in { display: flex; flex-direction: column; align-items: center; gap: 6px; text-align: center; }
+.sp-art { position: relative; width: min(56vw, 250px); }
+.sp-flask { display: block; width: 100%; height: auto; overflow: visible; animation: spPop .55s cubic-bezier(.34,1.56,.64,1) both; }
+.sp-liq { transform: translateY(150px); animation: spFill 1.05s .25s cubic-bezier(.3,.7,.3,1) forwards; }
+.sp-bub { opacity: 0; animation: spBub 1s ease-out both; }
+.sp-chip { position: absolute; background: #fff; color: #1B1A4D; font-weight: 900; font-size: 18px; padding: 6px 13px; border-radius: 999px; box-shadow: 0 6px 16px rgba(0,0,0,.3); animation: spChip .5s cubic-bezier(.34,1.56,.64,1) both; font-variant-numeric: tabular-nums; }
+.sp-chip.c1 { left: -10%; top: 6%; animation-delay: .95s; }
+.sp-chip.c2 { right: -14%; top: 40%; animation-delay: 1.1s; }
+.sp-chip.c3 { right: 4%; top: -6%; background: var(--ac); color: var(--ac-ink); animation-delay: 1.25s; }
+.sp-title { margin-top: 14px; font-weight: 900; font-size: clamp(32px, 9vw, 46px); letter-spacing: -0.01em; line-height: 1.05; animation: spUp .6s .85s cubic-bezier(.2,.8,.2,1) both; }
+.sp-sub { color: var(--soft); font-weight: 700; animation: spUp .6s 1.05s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes spPop { from { opacity: 0; transform: scale(.7) translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes spFill { to { transform: translateY(88px); } }
+@keyframes spBub { 0% { opacity: 0; transform: translateY(0); } 25% { opacity: .85; } 100% { opacity: 0; transform: translateY(-34px); } }
+@keyframes spChip { from { opacity: 0; transform: scale(.3) translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes spUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 @media (max-width: 380px) { .chip { font-size: 13px; min-height: 48px; } }
-@media (prefers-reduced-motion: reduce) { .prog i { transition: none; } }
+@media (prefers-reduced-motion: reduce) { .prog i { transition: none; } .screen.enter { animation: none; } .nav .ind { transition: none; } }
 </style>
 
 </head>
 <body>
 <div id="app"></div>
+<div id="splash" aria-hidden="true"><div class="sp-in">
+  <div class="sp-art">
+    <svg class="sp-flask" viewBox="0 0 220 210">
+      <defs><clipPath id="spclip"><path d="M92 44h36v44l50 78q8 18-12 18H54q-20 0-12-18l50-78z"/></clipPath></defs>
+      <path d="M92 44h36v44l50 78q8 18-12 18H54q-20 0-12-18l50-78z" fill="rgba(255,255,255,.14)"/>
+      <g clip-path="url(#spclip)"><rect class="sp-liq" x="30" y="44" width="160" height="150" fill="var(--ac)"/>
+        <circle class="sp-bub" cx="104" cy="170" r="6" fill="#fff" style="animation-delay:1s"/>
+        <circle class="sp-bub" cx="128" cy="176" r="4" fill="#fff" style="animation-delay:1.2s"/>
+        <circle class="sp-bub" cx="116" cy="164" r="5" fill="#fff" style="animation-delay:1.4s"/></g>
+      <path d="M92 44h36v44l50 78q8 18-12 18H54q-20 0-12-18l50-78z" fill="none" stroke="#fff" stroke-width="9" stroke-linejoin="round"/>
+      <rect x="82" y="36" width="56" height="14" rx="7" fill="#fff"/>
+    </svg>
+    <span class="sp-chip c1">+VII</span><span class="sp-chip c2">−II</span><span class="sp-chip c3">+I</span>
+  </div>
+  <div class="sp-title">Oxidationstal</div>
+  <div class="sp-sub">Træning til kemi</div>
+</div></div>
 
 <script>
 // Format: formel|grundstof|oxidationstal|kendte oxidationstal (valgfri)
@@ -445,7 +498,7 @@ const ICON = {
 };
 
 /* Gemte data */
-let store = { ans: 0, ok: 0, wrong: [], days: {}, cats: {}, skin: 'indigo', len: 20 };
+let store = { ans: 0, ok: 0, wrong: [], days: {}, cats: {}, skin: 'indigo', len: 20, nav: { x: 0, y: 0 } };
 try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && Array.isArray(s.wrong)) store = Object.assign(store, s); } catch (e) {}
 const save = () => { try { localStorage.setItem(KEY, JSON.stringify(store)); } catch (e) {} };
 const dkey = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
@@ -531,16 +584,37 @@ function render(top) {
   if (S.screen === 'tabs') app.innerHTML = tabs();
   else if (S.screen === 'quiz') app.innerHTML = quiz();
   else app.innerHTML = result();
+  if (S.screen === 'tabs') initNav();
   if (top) window.scrollTo(0, 0);
 }
 
+const TABS = ['ova', 'over', 'regler', 'konto'];
+function tabBody() { return S.tab === 'ova' ? tabOva() : S.tab === 'over' ? tabOver() : S.tab === 'regler' ? tabRegler() : tabKonto(); }
 function nav() {
-  const t = (id, ic, name) => `<button class="${S.tab === id ? 'on' : ''}" data-a="tab" data-t="${id}" aria-label="${name}" ${S.tab === id ? 'aria-current="page"' : ''}>${ic}${name}</button>`;
-  return `<nav class="nav">${t('ova', ICON.tOva, 'Øv')}${t('over', ICON.tOver, 'Overblik')}${t('regler', ICON.tRegler, 'Regler')}${t('konto', ICON.tKonto, 'Konto')}</nav>`;
+  const t = (id, ic, name) => `<button data-a="tab" data-t="${id}" aria-label="${name}">${ic}${name}</button>`;
+  return `<nav class="nav" aria-label="Menu"><i class="ind" aria-hidden="true"></i>${t('ova', ICON.tOva, 'Øv')}${t('over', ICON.tOver, 'Overblik')}${t('regler', ICON.tRegler, 'Regler')}${t('konto', ICON.tKonto, 'Konto')}</nav>`;
 }
-function tabs() {
-  const body = S.tab === 'ova' ? tabOva() : S.tab === 'over' ? tabOver() : S.tab === 'regler' ? tabRegler() : tabKonto();
-  return `<div class="screen">${body}</div>${nav()}`;
+function tabs() { return `<div class="screen" id="scr">${tabBody()}</div>${nav()}`; }
+function navGeom(nv) { const W = nv.clientWidth, w = (W - 26) / 4; return { W, w, step: w + 4 }; }
+function navSync() {
+  const nv = document.querySelector('.nav'); if (!nv) return;
+  const idx = TABS.indexOf(S.tab), g = navGeom(nv), ind = nv.querySelector('.ind');
+  ind.style.width = g.w + 'px'; ind.style.setProperty('--x', (7 + idx * g.step) + 'px');
+  nv.querySelectorAll('button').forEach((b, i) => { b.classList.toggle('on', i === idx); b.classList.remove('hot'); if (i === idx) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
+}
+function initNav() {
+  const nv = document.querySelector('.nav'); if (!nv) return;
+  nv.classList.add('init'); navSync();
+  requestAnimationFrame(() => requestAnimationFrame(() => nv.classList.remove('init')));
+}
+function setTab(t) {
+  if (S.screen !== 'tabs' || t === S.tab) return;
+  const dir = TABS.indexOf(t) > TABS.indexOf(S.tab) ? 1 : -1;
+  S.tab = t; S.hm = null; S.sure = false;
+  const scr = document.getElementById('scr');
+  scr.innerHTML = tabBody();
+  scr.style.setProperty('--dir', dir); scr.classList.remove('enter'); void scr.offsetWidth; scr.classList.add('enter');
+  window.scrollTo(0, 0); navSync();
 }
 
 function tabOva() {
@@ -552,6 +626,7 @@ function tabOva() {
       <button class="tile" data-a="test"><b>Prøve</b><span>${store.len} spørgsmål, resultat til sidst</span></button>
       <button class="tile" data-a="wrong" ${w ? '' : 'disabled'}><b>Mine fejl</b><span>${w ? w + ' at øve igen' : 'Ingen endnu'}</span></button>
     </div>
+    <div class="lenrow"><span>Spørgsmål pr. runde</span><div class="seg">${[10, 20, 30].map(n => `<button class="${store.len === n ? 'on' : ''}" data-a="len" data-n="${n}">${n}</button>`).join('')}</div></div>
     <h2 class="sec">Øv et emne</h2>
     <div class="topics">${CATS.map(c => `<button class="topic" data-a="cat" data-c="${c}"><b>${c}</b><span>${catCount(c)} spørgsmål</span></button>`).join('')}</div>`;
 }
@@ -660,8 +735,8 @@ function tabKonto() {
   return `<div class="head"><div><h1>Konto</h1><p>Indstillinger til appen</p></div></div>
     <div class="surf"><h2 class="sec" style="margin:0">Farvetema</h2>
       <div class="skins">${skins.map(s => `<button class="skin ${store.skin === s[0] ? 'on' : ''}" data-a="skin" data-s="${s[0]}"><i style="background:${s[2]}"></i>${s[1]}</button>`).join('')}</div></div>
-    <div class="surf"><h2 class="sec" style="margin:0">Spørgsmål pr. runde</h2>
-      <div class="seg">${[10, 20, 30].map(n => `<button class="${store.len === n ? 'on' : ''}" data-a="len" data-n="${n}">${n}</button>`).join('')}</div></div>
+    <div class="surf"><h2 class="sec" style="margin:0">Menu</h2>
+      <p class="note-s" style="margin-top:8px">Hold fingeren på menuen i bunden og træk til siden for at skifte fane.</p></div>
     <div class="surf"><h2 class="sec" style="margin:0">Data</h2>
       <button class="danger ${S.sure ? 'sure' : ''}" data-a="reset">${S.sure ? 'Tryk igen for at slette alt' : 'Nulstil fremgang'}</button>
       <p class="note-s">Dine tal gemmes kun i denne browser, ikke på en server.</p></div>`;
@@ -735,6 +810,7 @@ setInterval(() => { const el = document.getElementById('tm'); if (el && S.screen
 
 /* Klik */
 app.addEventListener('click', e => {
+  if (Date.now() - noClick < 400 && e.target.closest('.nav')) return;
   const b = e.target.closest('[data-a]'); if (!b || b.disabled) return;
   const a = b.dataset.a;
   if (a === 'practice') startPractice();
@@ -742,7 +818,7 @@ app.addEventListener('click', e => {
   else if (a === 'wrong') startWrong();
   else if (a === 'cat') startPractice(b.dataset.c);
   else if (a === 'home') toTabs();
-  else if (a === 'tab') { S.tab = b.dataset.t; S.hm = null; S.sure = false; render(true); }
+  else if (a === 'tab') setTab(b.dataset.t);
   else if (a === 'hm') { S.hm = S.hm === b.dataset.k ? null : b.dataset.k; render(false); }
   else if (a === 'skin') { store.skin = b.dataset.s; save(); applySkin(); render(false); }
   else if (a === 'len') { store.len = +b.dataset.n; save(); render(false); }
@@ -766,7 +842,50 @@ app.addEventListener('click', e => {
   }
   else if (a === 'again') { S.tag === 'Prøve' ? startTest() : startPractice(CATS.includes(S.tag) ? S.tag : undefined); }
 });
+
+/* Træk mellem faner */
+let dg = null, noClick = 0;
+app.addEventListener('pointerdown', e => {
+  const nv = e.target.closest('.nav'); if (!nv || e.button > 0) return;
+  dg = { nv, id: e.pointerId, sx: e.clientX, on: false, hot: TABS.indexOf(S.tab) };
+});
+app.addEventListener('pointermove', e => {
+  if (!dg || e.pointerId !== dg.id) return;
+  if (!dg.on) {
+    if (Math.abs(e.clientX - dg.sx) < 6) return;
+    dg.on = true; try { dg.nv.setPointerCapture(e.pointerId); } catch (er) {}
+    dg.nv.classList.add('grab');
+    dg.nv.querySelectorAll('button').forEach(b => b.classList.remove('on'));
+  }
+  const r = dg.nv.getBoundingClientRect(), g = navGeom(dg.nv);
+  const left = Math.max(7, Math.min(g.W - 7 - g.w, e.clientX - r.left - g.w / 2));
+  dg.nv.querySelector('.ind').style.setProperty('--x', left + 'px');
+  const hot = Math.max(0, Math.min(3, Math.round((left - 7) / g.step)));
+  if (hot !== dg.hot) { dg.hot = hot; try { if (navigator.vibrate) navigator.vibrate(8); } catch (er) {} }
+  dg.nv.querySelectorAll('button').forEach((b, i) => b.classList.toggle('hot', i === hot));
+});
+const endDg = e => {
+  if (!dg || e.pointerId !== dg.id) return;
+  const d = dg; dg = null;
+  if (!d.on) return;
+  noClick = Date.now();
+  d.nv.classList.remove('grab');
+  const to = TABS[d.hot];
+  if (to === S.tab) navSync(); else setTab(to);
+};
+app.addEventListener('pointerup', endDg);
+app.addEventListener('pointercancel', endDg);
+window.addEventListener('resize', () => { if (S.screen === 'tabs') navSync(); });
 render(false);
+
+/* Åbningsanimation */
+(function () {
+  const sp = document.getElementById('splash'); if (!sp) return;
+  if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) { sp.remove(); return; }
+  const kill = () => { if (!sp.parentNode || sp.classList.contains('out')) return; sp.classList.add('out'); setTimeout(() => sp.remove(), 500); };
+  sp.addEventListener('click', kill);
+  setTimeout(kill, 2400);
+})();
 </script>
 <script>if ('serviceWorker' in navigator && location.protocol.indexOf('http') === 0) { navigator.serviceWorker.register('sw.js').catch(function () {}); }</script>
 </body>
